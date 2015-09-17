@@ -20,6 +20,8 @@ public class NaiveBot {
 
     private boolean movedAlready = false;
 
+    public static volatile int shotDirection = 1;
+
     public static void main(String... args) throws Exception {
         new NaiveBot().run();
     }
@@ -61,16 +63,6 @@ public class NaiveBot {
     }
 
     private Command fireShot() {
-        return Command.fire(45, rand.nextInt(100) + 30);
-    }
-
-    public Command generateCommand() {
-        if (!movedAlready) {
-            movedAlready = true;
-            return Command.move(1000000);
-        } else {
-//            return Command.fire(rand.nextInt(50) - 45, rand.nextInt(100) + 30);
-            return Command.fire(45, rand.nextInt(100) + 30);
-        }
+        return Command.fire(shotDirection, rand.nextInt(100) + 30);
     }
 }
