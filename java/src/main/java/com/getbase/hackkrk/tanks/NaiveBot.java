@@ -1,6 +1,8 @@
 package com.getbase.hackkrk.tanks;
 
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +16,7 @@ public class NaiveBot {
     private static final Logger log = LoggerFactory.getLogger(NaiveBot.class);
     private Random rand = new Random();
 
-    public volatile Command nextCommand = null;
+    public static volatile Command nextCommand = null;
 
     private boolean movedAlready = false;
 
@@ -23,8 +25,13 @@ public class NaiveBot {
     }
 
     public void run() throws Exception {
-//        TanksClient client = new TanksClient("http://10.12.202.144:9999/", "sandbox-1", "NobleGainsboroDinosaurGuanaco");
-        TanksClient client = new TanksClient("http://10.12.202.141:9999/", "master", "NobleGainsboroDinosaurGuanaco");
+        TanksClient client = new TanksClient("http://10.12.202.144:9999/", "sandbox-1", "NobleGainsboroDinosaurGuanaco");
+//        TanksClient client = new TanksClient("http://10.12.202.141:9999/", "master", "NobleGainsboroDinosaurGuanaco");
+
+        ReaderKeyboard readerKeyboard = new ReaderKeyboard();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(1);
+        executorService.submit(readerKeyboard);
 
         while (true) {
             log.info("Waiting for the next game...");
@@ -38,11 +45,23 @@ public class NaiveBot {
     private void playGame(TanksClient client) {
         boolean gameFinished = false;
         while (!gameFinished) {
-            TurnResult result = client.submitMove(generateCommand());
+
+            Command thisTurnCommand;
+            if (nextCommand != null) {
+                thisTurnCommand = nextCommand;
+                nextCommand = null;
+            } else {
+                thisTurnCommand = fireShot();
+            }
+            TurnResult result = client.submitMove(thisTurnCommand);
 
             gameFinished = result.last;
 
         }
+    }
+
+    private Command fireShot() {
+        return Command.fire(45, rand.nextInt(100) + 30);
     }
 
     public Command generateCommand() {
